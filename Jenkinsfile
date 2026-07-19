@@ -4,17 +4,22 @@ pipeline {
     stages {
         stage('Deploy To Kubernetes') {
             steps {
-                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'EKS-1', contextName: '', credentialsId: 'k8-token', namespace: 'webapps', serverUrl: 'https://C2FC1E2C584733BFDAAE899CA271A7DA.yl4.ap-south-1.eks.amazonaws.com']]) {
-                    sh "kubectl apply -f deployment-service.yml"
-                    
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                    sh '''
+                    aws eks update-kubeconfig --region ap-south-1 --name EKS-1
+                    kubectl apply -f deployment-service.yml -n webapps
+                    '''
                 }
             }
         }
-        
-        stage('verify Deployment') {
+
+        stage('Verify Deployment') {
             steps {
-                withKubeCredentials(kubectlCredentials: [[caCertificate: '', clusterName: 'EKS-1', contextName: '', credentialsId: 'k8-token', namespace: 'webapps', serverUrl: 'https://C2FC1E2C584733BFDAAE899CA271A7DA.yl4.ap-south-1.eks.amazonaws.com']]) {
-                    sh "kubectl get svc -n webapps"
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-creds']]) {
+                    sh '''
+                    aws eks update-kubeconfig --region ap-south-1 --name EKS-1
+                    kubectl get svc -n webapps
+                    '''
                 }
             }
         }
